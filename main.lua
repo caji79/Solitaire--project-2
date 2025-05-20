@@ -210,32 +210,6 @@ function drawCard(clickX, clickY)
         --     table.insert(cardTable, card)
         -- end
 
-        --method 3
-        -- if #deckPile > 0 then
-        --     -- === CASE 1: Still cards in stock, so draw up to 3 ===
-        --     for i = 1, 3 do
-        --         if #deckPile == 0 then break end
-        --         local c = table.remove(deckPile)  -- take from top
-        --         c.faceUp    = true
-        --         c.draggable = true
-        --         table.insert(drawPile, c)
-        --     end
-    
-        -- elseif #drawPile > 0 then
-        --     -- === CASE 2: Stock is empty, recycle the waste ===
-        --     for i = #drawPile, 1, -1 do
-        --         local c = table.remove(drawPile, i)
-        --         c.faceUp    = false
-        --         c.draggable = false
-        --         c.position  = Vector(deckX, deckY)
-        --         table.insert(deckPile, 1, c)     -- send to bottom of deck
-        --     end
-        -- end
-
-        -- for i, card in ipairs(drawPile) do
-        --     card.draggable = (i == #drawPile)
-        -- end
-
     end
 end
 
