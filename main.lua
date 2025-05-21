@@ -5,6 +5,7 @@
 require "card"
 require "grabber"
 require "gameBoard"
+require "util"
 
 local DRAW_OFFSET_Y = 30
 local drawPilePosX = 25
@@ -113,9 +114,9 @@ function drawCard(clickX, clickY)
 
             if #drawShow > 0 then
                 for i = 1, #drawShow - toKeep do
-                  local card = drawShow[i]
-                  card.position = drawCardPos[1]
-                  card.draggable = false  -- Ensure stacked cards cannot be dragged
+                    local card = drawShow[i]
+                    card.position = drawCardPos[1]
+                    card.draggable = false
                 end
             end
 
@@ -133,11 +134,11 @@ function drawCard(clickX, clickY)
                 local card = table.remove(deckPile)
                 if card then
                     card.faceUp, card.draggable = true, true
-                    -- Ensure new cards are at the top of rendering order
+                    --Ensure new cards are at the top of rendering order
                     for j, c in ipairs(cardTable) do
                         if c == card then
                             table.remove(cardTable, j)
-                            table.insert(cardTable, card) -- Reinsert at the end (top)
+                            table.insert(cardTable, card)
                             break
                         end
                     end
@@ -147,7 +148,7 @@ function drawCard(clickX, clickY)
             end
 
             for i, card in ipairs(drawUpdate) do
-                card.position = drawCardPos[i]
+                card.position = Vector(drawCardPos[i].x, drawCardPos[i].y)
                 table.insert(drawShow, card)
             end
             
@@ -159,57 +160,12 @@ function drawCard(clickX, clickY)
                 card.draggable = false
                 card.position = Vector(25, 25)
                 table.insert(deckPile, card)
-                -- table.insert(cardTable, card)
             end
         end
 
-        --method 1
-        -- if #deckPile > 0 then
-        --     for i = 1, 3 do
-        --         if #deckPile == 0 then break end
-        --         -- remove top card from stock
-        --         local card = table.remove(deckPile)
-        --         card.faceUp = true
-        --         card.draggable = true
-
-        --         -- move it to your draw‐pile position
-        --         table.insert(drawPile, card)
-        --         table.insert(cardTable, card)
-        --     end
-            
-        -- elseif #drawPile > 0 then
-        --     for i = #drawPile, 1, -1 do
-        --         local card = table.remove(drawPile)
-        --         card.faceUp = false
-        --         card.draggable = false
-        --         card.position = Vector(25, 25)
-        --         table.insert(deckPile, card)
-        --         table.insert(cardTable, card)
-        --     end
+        -- for i, card in ipairs(drawShow) do
+        --     card.draggable = (i == #drawShow)
         -- end
-
-        --method 2
-        -- for i = #drawPile, 1, -1 do
-        --     local card = table.remove(drawPile, i)
-        --     card.faceUp    = false
-        --     card.draggable = false
-        --     card.position  = Vector(deckX, deckY)
-        --     -- insert at the bottom so next draws come after these
-        --     table.insert(deckPile, 1, card)
-        --     table.insert(cardTable, card)
-        -- end
-
-        -- -- 2) draw up to three new cards from the top of the deck
-        -- for i = 1, 3 do
-        --     if #deckPile == 0 then break end
-        --     local card = table.remove(deckPile)  -- top of deck
-        --     card.faceUp = true
-        --     card.draggable = true
-        --     card.position = Vector(drawPilePos.x, drawPilePos.y)
-        --     table.insert(drawPile, card)
-        --     table.insert(cardTable, card)
-        -- end
-
     end
 end
 
@@ -219,6 +175,11 @@ function love.draw()
     for _, card in ipairs(cardTable) do
         card:draw()
     end
+
+    -- #cardTable debug
+    local numCardTable = #cardTable
+    love.graphics.setColor(1,1,1)
+    love.graphics.print("cardTable number: "..numCardTable, 10, 700)
 
     -- card state debug
     love.graphics.setColor(1,1,1)
@@ -275,6 +236,13 @@ function removeCardFromOrigin(card, origin)
             end
         end
 
+        for i = #drawShow, 1, -1 do
+            if drawShow[i] == card then
+              table.remove(drawShow, i)
+              break
+            end
+        end
+
     elseif origin.type == "deck" then
         for i = #deckPile, 1, -1 do
             if deckPile[i] == card then
@@ -291,5 +259,14 @@ function removeCardFromOrigin(card, origin)
                 break
             end
         end
+    end
+end
+
+function snapBackDrawCard()
+    for i, card in ipairs(drawShow) do
+      -- snap each card back into its fan slot:
+      card.position  = Vector(drawCardPos[i].x, drawCardPos[i].y)
+      -- only the topmost one should be draggable:
+      card.draggable = (i == #drawShow)
     end
 end

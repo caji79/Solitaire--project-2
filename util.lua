@@ -16,3 +16,13 @@ function generateQuads(image, cardWidth, cardHeight)
     return quads
 end
 
+-- function revertCardOrder(cardTable)
+--     for j, c in ipairs(cardTable) do
+--         if c == card then
+--             table.remove(cardTable, j)
+--             table.insert(cardTable, card)
+--             break
+--         end
+--     end
+-- end
+

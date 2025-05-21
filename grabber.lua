@@ -71,9 +71,10 @@ function GrabberClass:grab()
 
     -- draw check
     if not origin.type then
-        for i = #drawPile, 1, -1 do
-            if drawPile[i] == grabbedCard then
-                origin = { type = "draw" }
+        for i = #drawShow, 1, -1 do
+            if drawShow[i] == grabbedCard then
+                origin = { type = "draw", idx = i }
+                break
             end
         end
     end
@@ -117,6 +118,12 @@ function GrabberClass:grab()
                 break
             end
         end
+        for k = #drawShow, 1, -1 do
+            if drawShow[k] == grabbedCard then
+                table.remove(drawShow, k)
+                break
+            end
+        end
     end
 
     self.origin = origin
@@ -129,15 +136,6 @@ function GrabberClass:grab()
     }
     grabbedCard.originalPos = Vector(grabbedCard.position.x, grabbedCard.position.y)
     self.grabPos = self.currentMousePos
-
-    -- move the card to the top 
-    -- for i, c in ipairs(cardTable) do
-    --     if c == grabbedCard then
-    --         table.remove(cardTable, i)
-    --         table.insert(cardTable, grabbedCard)
-    --         break
-    --     end
-    -- end
 
     -- bring them to front in draw order
     for _, card in ipairs(held) do
@@ -245,9 +243,8 @@ function GrabberClass:release()
                 card.position = Vector(stackPilesPos[suitIdx].x, stackPilesPos[suitIdx].y)
                 table.insert(stackPiles[s], card)
             
-            else
-                -- drawPile or others
-                card.position = Vector(drawPilePos.x, drawPilePos.y)
+            elseif self.origin.type == "draw" then
+                table.insert(drawShow, card)
                 table.insert(drawPile, card)
             end
         end
@@ -265,9 +262,38 @@ function GrabberClass:release()
         end
     end
 
-    -- local isValidRealse = true
-    -- if not isValidRealse then
-    --     self.heldObject.position = self.grabPos
+    snapBackDrawCard()
+
+    -- if self.origin.type == "draw" and moved then
+    --     -- 1) pull a replacement from deck if we can:
+    --     if #deckPile > 0 then
+    --         local newCard = table.remove(deckPile)
+    --         newCard.faceUp, newCard.draggable = true, true
+    
+    --         -- insert at front of your two waste arrays
+    --         table.insert(drawPile, 1, newCard)
+    --         table.insert(drawShow, 1, newCard)
+    --     end
+    
+    --     -- 2) scrub out ALL three waste cards from cardTable
+    --     for _, c in ipairs(drawShow) do
+    --         for j = #cardTable, 1, -1 do
+    --             if cardTable[j] == c then
+    --                 table.remove(cardTable, j)
+    --                 break
+    --             end
+    --         end
+    --     end
+    
+    --     -- 3) re‑append them in slot‑order so they become the topmost three
+    --     for _, c in ipairs(drawShow) do
+    --         table.insert(cardTable, c)
+    --     end
+
+    --     -- 4) now re‑position all visible waste cards into their slots
+    --     for i, card in ipairs(drawShow) do
+    --         card.position = Vector(drawCardPos[i].x, drawCardPos[i].y)
+    --     end
     -- end
 
     for _, card in ipairs(self.heldCards) do
