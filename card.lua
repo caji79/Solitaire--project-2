@@ -3,12 +3,14 @@ require "vector"
 
 CardClass = {}
 
+-- card state (state pattern)
 CARD_STATE = {
     IDLE = 0,
     MOUSE_OVER = 1,
     GRABBED = 2
   }
 
+-- card properties
 SUITS = { "spades", "clubs", "hearts", "diamonds" }
 RANKS = { 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K' }
 
@@ -25,16 +27,22 @@ rankValueMap = {
     J = 11, Q = 12, K = 13
 }
 
+-- loading card assets
 CardClass.cardFront = love.graphics.newImage('assets/cards.png')
 CardClass.cardFront:setFilter('nearest', 'nearest')
 CardClass.cardBack = love.graphics.newImage('assets/cardBack.png')
 CardClass.cardBack:setFilter('nearest', 'nearest')
+
+-- constant value for card assets
 CARD_WIDTH = 25
 CARD_HEIGHT = 38
 CARD_SCALE_X = 3
 CARD_SCALE_Y =3
+
+-- see util.lua
 CardClass.quads = generateQuads(CardClass.cardFront, CARD_WIDTH, CARD_HEIGHT)
 
+-- class pattern
 function CardClass:new(quadIndex, xPos, yPos, rank, suit, faceUp)
     local card = {}
     local metadata = {__index = CardClass}
@@ -49,7 +57,6 @@ function CardClass:new(quadIndex, xPos, yPos, rank, suit, faceUp)
     card.suit = suit
     card.faceUp = faceUp or false
     card.draggable = false
-
     return card
 end
 
@@ -74,6 +81,7 @@ function CardClass:checkForMouseOver(grabber)
     end
       
     local mousePos = grabber.currentMousePos
+    -- check if cursor is above the card area
     local isMouseOver = 
       mousePos.x > self.position.x and
       mousePos.x < self.position.x + (CARD_WIDTH * self.scaleX) and
@@ -81,11 +89,11 @@ function CardClass:checkForMouseOver(grabber)
       mousePos.y < self.position.y + (CARD_HEIGHT * self.scaleY)
     
     self.state = isMouseOver and CARD_STATE.MOUSE_OVER or CARD_STATE.IDLE
-  end
+end
 
 function CardClass:deckBuilder()
     local deck = {}
-
+    -- put all the card (organized by suits and ranks) in the deck table first, then shuffle
     for suitIdx, suit in ipairs(SUITS) do
         for rankIdx, rank in ipairs(RANKS) do
             local quadIdx = (suitIdx - 1) * #RANKS + rankIdx
@@ -97,8 +105,8 @@ function CardClass:deckBuilder()
     return deck
 end
 
+-- lecture slides modern shuffling method
 function CardClass:shuffle(deck)
-    -- lecture slides modern shuffling method
     local cardCount = #deck
     for i = 1, cardCount do
         local randIndex = love.math.random(cardCount)

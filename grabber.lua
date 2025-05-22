@@ -2,6 +2,7 @@ require "vector"
 
 GrabberClass = {}
 
+-- class pattern
 function GrabberClass:new(cardTable)
     local grabber = {}
     local metadata = {__index = GrabberClass}
@@ -19,13 +20,14 @@ end
 function GrabberClass:update()
     self.currentMousePos = Vector(love.mouse.getX(), love.mouse.getY())
     if self.heldCards then
+        -- make sure cards stay at the point where it's being grabbed  (won't attach to the top-left corner)
         for k, card in ipairs(self.heldCards) do
             card.position.x = self.currentMousePos.x - self.mouseOffset.x
             card.position.y = self.currentMousePos.y - self.mouseOffset.y + (k - 1) * cardOverlap
         end
     end
     
-    -- Click
+    -- click/grab
     if love.mouse.isDown(1) and self.grabPos == nil then
         local mx,my = self.currentMousePos.x, self.currentMousePos.y
         local deckX, deckY = 25, 25
@@ -37,7 +39,7 @@ function GrabberClass:update()
         end
         self:grab()
     end
-    -- Release
+    -- release
     if not love.mouse.isDown(1) and self.grabPos ~= nil then
         self:release()
     end  
@@ -48,6 +50,7 @@ function GrabberClass:grab()
     local grabbedCard = nil
     for i = #self.cards, 1, -1 do
         local card = self.cards[i]
+        -- you can only grab a card with mouse over state
         if card.state == CARD_STATE.MOUSE_OVER and card.draggable then
             grabbedCard = card
             break
@@ -55,7 +58,8 @@ function GrabberClass:grab()
     end
     if not grabbedCard then return end
 
-    -- determine origin
+    -- determine card's origin (which pile the grabbed card is from)
+    -- this is related to removeCardFromOrigin()—— after the card is grabbed, remove it from that pile
     local origin = {}
 
     -- tableau check
@@ -100,6 +104,8 @@ function GrabberClass:grab()
         end
     end
 
+    -- this is designed for grabbing connected cards from tableau later in release()
+    -- tracking self.heldCards in GrabberClass:release() will help understand its logic
     local held = {}
     if origin.type == "tableau" then
         local pile = tableauPiles[origin.col]
@@ -155,20 +161,24 @@ function GrabberClass:release()
         return
     end
 
-    
+    -- grabbing connected card(s) from tableau
+    -- checking if connected card(s) drop at the valid spot, if not, back to origin (state/pile/position)
     local basedCard = self.heldCards[1]
     local cw, ch = CARD_WIDTH * CARD_SCALE_X, CARD_HEIGHT * CARD_SCALE_Y
     local moved = false
 
+    -- suit pile mechanics
     local card = self.heldObject
     for i, pos in ipairs(stackPilesPos) do
+        -- check card drops at correct suit pile and follows the rule
         if checkOverlaps(card.position.x, card.position.y, cw, ch, pos.x, pos.y, cw, ch) 
             and validStackPileAdding(card, i) 
         then
             card.position = Vector(pos.x, pos.y)
+            -- valid drop, remove the card from its origin (draw or tableau)
             removeCardFromOrigin(card, self.origin)
         
-            -- add it to the stackPile table
+            -- add it to the stackPile table (suit)
             table.insert(stackPiles[ SUITS[i] ], card)
             moved = true
 
@@ -181,11 +191,12 @@ function GrabberClass:release()
         end
     end
 
-    -- tableau
+    -- tableau mechanics (similar with suit pile mechanics, but )
     if not moved then
         for i, pos in ipairs(tableauPos) do
             local dropX, dropY
             local pile = tableauPiles[i]
+            -- check whether the tableau column is empty or not
             if #pile > 0 then
                 local top = pile[#pile]
                 dropX =  top.position.x
@@ -195,6 +206,7 @@ function GrabberClass:release()
                     and self:tableauMove(basedCard, top)
                 then
                     for k, c in ipairs(self.heldCards) do
+                        -- when the player try to move card from suit pile back to tableau pile
                         if self.origin.type == "foundation" then
                             removeCardFromOrigin(card, self.origin)
                         end
@@ -205,6 +217,7 @@ function GrabberClass:release()
                     moved = true
                     break
                 end
+            -- if tableau column is empty, the player must drop king first
             else
                 dropX = pos.x
                 dropY = pos.y
@@ -213,6 +226,7 @@ function GrabberClass:release()
                     and rankValueMap[basedCard.rank] == 13
                 then
                     for k, c in ipairs(self.heldCards) do
+                        -- when the player try to move card from suit pile back to tableau pile
                         if self.origin.type == "foundation" then
                             removeCardFromOrigin(card, self.origin)
                         end
@@ -228,7 +242,6 @@ function GrabberClass:release()
     end
 
     if not moved then
-        -- card.position = card.originalPos
         for k, card in ipairs(self.heldCards) do
             -- reconstruct original positions in the source pile
             if self.origin.type=="tableau" then
@@ -270,16 +283,10 @@ function GrabberClass:release()
 
     snapBackDrawCard()
 
+    -- remove the release card from draw pile history
     if self.origin.type == "draw" and moved then
-        -- 1) remove *that* card from the master history:
-        for i = #drawPile, 1, -1 do
-            if drawPile[i] == card then
-                table.remove(drawPile, i)
-                break
-            end
-        end
-      
-        -- 2) now immediately refresh the waste slots:
+        removeCardFromOrigin(card, self.origin)
+        -- update drawShow
         updateDrawShow()
     end
 
@@ -288,7 +295,6 @@ function GrabberClass:release()
     end
     self.heldCards = nil
     self.origin = nil
-    -- self.heldObject.state = 0 -- it's no longer grabbed
     self.heldObject = nil
     self.grabPos    = nil
 end
