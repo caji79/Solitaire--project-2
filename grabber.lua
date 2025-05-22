@@ -171,6 +171,12 @@ function GrabberClass:release()
             -- add it to the stackPile table
             table.insert(stackPiles[ SUITS[i] ], card)
             moved = true
+
+            -- check if the player win the game
+            if checkForWin() then
+                gameWon = true
+            end
+
             break
         end
     end
@@ -264,37 +270,18 @@ function GrabberClass:release()
 
     snapBackDrawCard()
 
-    -- if self.origin.type == "draw" and moved then
-    --     -- 1) pull a replacement from deck if we can:
-    --     if #deckPile > 0 then
-    --         local newCard = table.remove(deckPile)
-    --         newCard.faceUp, newCard.draggable = true, true
-    
-    --         -- insert at front of your two waste arrays
-    --         table.insert(drawPile, 1, newCard)
-    --         table.insert(drawShow, 1, newCard)
-    --     end
-    
-    --     -- 2) scrub out ALL three waste cards from cardTable
-    --     for _, c in ipairs(drawShow) do
-    --         for j = #cardTable, 1, -1 do
-    --             if cardTable[j] == c then
-    --                 table.remove(cardTable, j)
-    --                 break
-    --             end
-    --         end
-    --     end
-    
-    --     -- 3) re‑append them in slot‑order so they become the topmost three
-    --     for _, c in ipairs(drawShow) do
-    --         table.insert(cardTable, c)
-    --     end
-
-    --     -- 4) now re‑position all visible waste cards into their slots
-    --     for i, card in ipairs(drawShow) do
-    --         card.position = Vector(drawCardPos[i].x, drawCardPos[i].y)
-    --     end
-    -- end
+    if self.origin.type == "draw" and moved then
+        -- 1) remove *that* card from the master history:
+        for i = #drawPile, 1, -1 do
+            if drawPile[i] == card then
+                table.remove(drawPile, i)
+                break
+            end
+        end
+      
+        -- 2) now immediately refresh the waste slots:
+        updateDrawShow()
+    end
 
     for _, card in ipairs(self.heldCards) do
         card.state = CARD_STATE.IDLE

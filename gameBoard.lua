@@ -13,14 +13,9 @@ function GameBoardClass:new()
     return gameBoard
 end
 
-function GameBoardClass:tableauLayout()
-
-end
-
 function GameBoardClass:draw()
+    love.graphics.setBackgroundColor(0, 0.6, 0.2, 1)
     self:drawGrid()
-
-    
 end
 
 function GameBoardClass:drawGrid()
