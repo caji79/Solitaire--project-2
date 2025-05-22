@@ -1,4 +1,5 @@
 require "vector"
+require "util"
 
 GrabberClass = {}
 
