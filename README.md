@@ -1,4 +1,4 @@
-# Project 1 - Solitaire
+# Project 2 - Solitaire
 
 ## Programming Pattern
 
@@ -13,7 +13,10 @@
     - Card states determine how cards respond to mouse input
     - Good for debugging
 
-3. Observer Pattern (?)
+3. Game Loop/Update Method Pattern
+
+    - main.lua has 1) init() 2) update() 3) draw()
+    - card.lua and grabber.lua have their own update method and they're called in main.lua
 
 ## Postmortem 
 
@@ -34,25 +37,57 @@
 
 - Clear function naming
 
+- Clear in-code comments
+    - I restructured and polished the code in main file and grabber file, removing some testing comments and adding some explanation
+
 - Visual design (maybe)
+
+- Helper function re-organizing
+    - I moved some helper function from main.lua to util.lua
+
+- New draw pile mechanism and logic
+    - The original draw pile logic is weak and doesn't work for draw-3 mode of solitaire
+    - I rebuild the draw pile mechanism by adding the card refilling feature. One table for recording draw card history, another one for displaying 3 draw cards
 
 ### What should improve
 
-- Code structure
+- Weak code structure and model
 
     - add state pattern for moving card in/out from pile
-    - maybe break down that long long long "If Statement"
+    - create functions for 4 differnt types of cards, not in grab()
 
-- Clearer in-code comments
+- Lengthy grabber functions
 
-    - explain what happens in code, especially in "For Loop"
+    - add more helper function to shrink grab() and release() complexity
+    - create 3 function for suit pile mechanism, draw pile mechanism, and tableau mechanism
 
-- Move some function to util.lua or build more files
+- Include Event Pattern
+    - introduce an event bus to emit player action functions, making debugging and extension much easier
 
-    - try to reduce the length of file
+- Winning state bug
 
-- Menu scene or Win scene
+    - bug is still not fixed
+
+- Audio
+
+## Question to think about
+
+- Which programming pattern will best fit for solitaire?
+- What code structions or logics can helo you build solitaire?
+
+## Special Thanks (Feedback)
+
+    - Chengkun
+        - missing comment, unclear structure ✅
+        - optimizing suit pattern ✅
 
 ## Assets
 
 - I mad the card assets in the game by using Aseprite
+
+## References
+
+- collision detection: https://love2d.org/forums/viewtopic.php?t=81957
+- love.graphics.newQuad(): https://youtu.be/BCp7_n-L-tc
+- card shuffle: CMPM121 lecture slide
+

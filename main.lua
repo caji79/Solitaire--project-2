@@ -1,6 +1,5 @@
 -- Eli Chen
 -- cmpm 121
--- 4/18/25
 
 require "card"
 require "grabber"
